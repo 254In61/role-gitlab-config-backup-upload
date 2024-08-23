@@ -1,30 +1,22 @@
 ---
-# # Localhost file operations
-# - name: Save the configuration to /tmp/
-#   ansible.builtin.copy:
-#     content: "{{ file_content }}"
-#     dest: "/tmp/{{ inventory_hostname }}-running-config.txt"
-
-# Tasks to git push network backup devices from execution environment to git repo.
-# - name: Clone down repo with backups
-#   ansible.builtin.command: |
-#     cd /tmp/ 
-#     "git clone {{ backups_git_repo_url }}"
-#   delegate_to: localhost
-
-- name: Clone the repository to the specified path
-  ansible.builtin.git:
-    repo: "'{{ backups_git_repo_url }}'"
-    dest: '{{ tmp_root_dir }}/{{ backups_git_repo_dir }}'
-    version: 'main'  # You can specify a branch, tag, or commit hash here
-    update: yes  # If the repo already exists, it will update it
-  delegate_to: localhost
-  run_once: true
-
-# - name: Clone network-configs-backup-store
-#   ansible.builtin.shell: "cd /tmp/ && rm -rf {{ backups_git_repo_dir }} && git clone {{ backups_git_repo_url }}"
+# Errors on this module
+# fatal: protocol ''https' is not supported\n"
+# - name: Clone the repository to the specified path
+#   ansible.builtin.git:
+#     repo: "'{{ backups_git_repo_url }}'"
+#     dest: '{{ tmp_root_dir }}/{{ backups_git_repo_dir }}'
+#     version: 'main'  # You can specify a branch, tag, or commit hash here
+#     update: yes  # If the repo already exists, it will update it
 #   delegate_to: localhost
 #   run_once: true
+
+- name: Clone network-configs-backup-store
+  ansible.builtin.shell: |
+    cd /tmp/
+    rm -rf {{ backups_git_repo_dir }}
+    git clone {{ backups_git_repo_url }}"
+  delegate_to: localhost
+  run_once: true
 
 - name: Init the Git Repo
   ansible.builtin.shell: |
