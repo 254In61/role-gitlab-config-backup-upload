@@ -27,22 +27,23 @@
   delegate_to: localhost
   run_once: true
 
-- name: Run config diff between the local file and the remote file
-  ansible.builtin.shell: |
-    diff -u {{ tmp_root_dir }}/{{ file_name }} {{ tmp_root_dir }}/{{ backups_git_repo_dir }}/{{ vendor_dir }}/{{ file_name }}
-  register: config_diff
-  delegate_to: localhost
-  ignore_errors: yes
+# Why run config diff? Ideallt if the file hasn't changed then the commit will show the same.
+# - name: Run config diff between the local file and the remote file
+#   ansible.builtin.shell: |
+#     diff -u {{ tmp_root_dir }}/{{ file_name }} {{ tmp_root_dir }}/{{ backups_git_repo_dir }}/{{ vendor_dir }}/{{ file_name }}
+#   register: config_diff
+#   delegate_to: localhost
+#   ignore_errors: yes
 
-- name: Print out config diff output
-  ansible.builtin.debug:
-    var: config_diff
+# - name: Print out config diff output
+#   ansible.builtin.debug:
+#     var: config_diff
 
-- name: Add file to local GitLab repo if it has changed
+- name: Add file to local GitLab repo
   ansible.builtin.copy:
     src: "{{ tmp_configs_store }}"
     dest: "/tmp/{{ backups_git_repo_dir }}/{{ vendor_dir }}/{{ file_name }}"
-  when: config_diff.rc != 0
+  # when: config_diff.rc != 0
   delegate_to: localhost
 
 - name: Commit and push changes to GitLab
@@ -51,7 +52,7 @@
     git add .
     git commit -m "Updated running-config for {{ inventory_hostname }} on $(date)"
     git push origin main
-  when: config_diff.rc != 0
+  # when: config_diff.rc != 0
   delegate_to: localhost
   run_once: true
 
