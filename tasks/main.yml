@@ -2,4 +2,4 @@
 # tasks file for gitlab
 - name: Import gitlab tasks
   ansible.builtin.import_tasks: gitlab.yml
-  when: git_backup | bool
+  when: git | bool

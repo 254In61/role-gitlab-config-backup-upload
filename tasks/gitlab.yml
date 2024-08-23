@@ -1,47 +1,39 @@
 ---
-# Localhost file operations
-- name: Create a temporary artifacts holder
-  ansible.builtin.file:
-    path: "{{ local_artifacts_holder }}"
-    state: directory
-  delegate_to: localhost
-
-- name: Save the configuration to a local file
-  ansible.builtin.copy:
-    content: "{{ file_content }}"
-    dest: "{{ local_artifacts_holder }}/{{ inventory_hostname }}-running-config.txt"
+# # Localhost file operations
+# - name: Save the configuration to /tmp/
+#   ansible.builtin.copy:
+#     content: "{{ file_content }}"
+#     dest: "/tmp/{{ inventory_hostname }}-running-config.txt"
 
 # Tasks to git push network backup devices from execution environment to git repo.
 - name: Clone down repo with backups
-  ansible.builtin.command: "git clone {{ git_repo }}"
+  ansible.builtin.command: "git clone {{ backups_git_repo_url }}"
   delegate_to: localhost
 
 - name: Initiate the Git Repo
   ansible.builtin.command: |
-    "cd {{ git_repo }}
+    "cd {{ backups_git_repo_dir }}
     git config --global user.name '{{ git_user }}'
     git config --global user.email '{{ git_user_email }}'
     git config --global http.sslVerify false"
   delegate_to: localhost
 
 - name: Check if the configuration file has changed
-  ansible.builtin.command: > 
-     "{{ local_artifacts_holder }}/{{ inventory_hostname }}-running-config.txt 
-      {{ git_repo }}/{{ git_dir }}/{{ inventory_hostname }}-running-config.txt"
+  ansible.builtin.command: "{{ tmp_configs_store }} {{ backups_git_repo_dir }}/{{ vendor_dir }}/{{ git_configs_store_file_name }}"
   register: config_diff
   delegate_to: localhost
   ignore_errors: yes
 
 - name: Add file to local GitLab repo if it has changed
   ansible.builtin.copy:
-    src: "{{ local_artifacts_holder }}/{{ inventory_hostname }}-running-config.txt"
-    dest: "{{ git_repo }}/{{ inventory_hostname }}-running-config.txt"
+    src: "{{ tmp_configs_store }}"
+    dest: "{{ backups_git_repo_dir }}/{{ vendor_dir }}/{{ git_configs_store_file_name }}"
   when: config_diff.rc != 0
   delegate_to: localhost
 
 - name: Commit and push changes to GitLab
   ansible.builtin.shell: |
-    cd {{ git_repo_path }}
+    cd {{ backups_git_repo_dir }}
     git add .
     git commit -m "Updated running-config for {{ inventory_hostname }} on $(date)"
     git push origin main
