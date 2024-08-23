@@ -19,6 +19,11 @@
 #     version: 'main'  # You can specify a branch, tag, or commit hash here
 #     update: yes  # If the repo already exists, it will update it
 
+- name: Clone network-configs-backup-store
+  ansible.builtin.shell: "cd /tmp/ && rm -rf {{ backups_git_repo_dir }} && git clone {{ backups_git_repo_url }}"
+  delegate_to: localhost
+  run_once: true
+
 - name: Init the Git Repo
   ansible.builtin.shell: |
     cd /tmp/{{ backups_git_repo_dir }}
@@ -26,6 +31,7 @@
     git config --global user.email '{{ git_user_email }}'
     git config --global http.sslVerify false
   delegate_to: localhost
+  run_once: true
 
 - name: Run config diff between the local file and the remote file
   ansible.builtin.command: "{{ tmp_configs_store }} /tmp/{{ backups_git_repo_dir }}/{{ vendor_dir }}/{{ file_name }}"
@@ -48,6 +54,7 @@
     git push origin main
   when: config_diff.rc != 0
   delegate_to: localhost
+  run_once: true
 
 - name: Clean up temporary files
   ansible.builtin.file:
