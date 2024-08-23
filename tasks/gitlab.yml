@@ -62,8 +62,9 @@
   delegate_to: localhost
   run_once: true
 
-- name: Clean up temporary files
-  ansible.builtin.file:
-    path: "/tmp/{{ inventory_hostname }}-running-config.txt"
-    state: absent
-  delegate_to: localhost
+# No need to clean up.. It is an ephemeral container that is killed after job is completed.
+# - name: Clean up temporary files
+#   ansible.builtin.file:
+#     path: "/tmp/{{ inventory_hostname }}-running-config.txt"
+#     state: absent
+#   delegate_to: localhost
