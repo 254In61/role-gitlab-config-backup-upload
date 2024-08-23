@@ -6,11 +6,18 @@
 #     dest: "/tmp/{{ inventory_hostname }}-running-config.txt"
 
 # Tasks to git push network backup devices from execution environment to git repo.
-- name: Clone down repo with backups
-  ansible.builtin.command: |
-    cd /tmp/ 
-    "git clone {{ backups_git_repo_url }}"
-  delegate_to: localhost
+# - name: Clone down repo with backups
+#   ansible.builtin.command: |
+#     cd /tmp/ 
+#     "git clone {{ backups_git_repo_url }}"
+#   delegate_to: localhost
+
+- name: Clone the repository to the specified path
+  ansible.builtin.git:
+    repo: "'{{ backups_git_repo_dir }}'"
+    dest: '/tmp/'
+    version: 'main'  # You can specify a branch, tag, or commit hash here
+    update: yes  # If the repo already exists, it will update it
 
 - name: Init the Git Repo
   ansible.builtin.command: |
