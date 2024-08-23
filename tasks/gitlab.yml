@@ -12,17 +12,19 @@
 #     "git clone {{ backups_git_repo_url }}"
 #   delegate_to: localhost
 
-# - name: Clone the repository to the specified path
-#   ansible.builtin.git:
-#     repo: "'{{ backups_git_repo_url }}'"
-#     dest: '/tmp/'
-#     version: 'main'  # You can specify a branch, tag, or commit hash here
-#     update: yes  # If the repo already exists, it will update it
-
-- name: Clone network-configs-backup-store
-  ansible.builtin.shell: "cd /tmp/ && rm -rf {{ backups_git_repo_dir }} && git clone {{ backups_git_repo_url }}"
+- name: Clone the repository to the specified path
+  ansible.builtin.git:
+    repo: "'{{ backups_git_repo_url }}'"
+    dest: '{{ tmp_root_dir }}/{{ backups_git_repo_dir }}'
+    version: 'main'  # You can specify a branch, tag, or commit hash here
+    update: yes  # If the repo already exists, it will update it
   delegate_to: localhost
   run_once: true
+
+# - name: Clone network-configs-backup-store
+#   ansible.builtin.shell: "cd /tmp/ && rm -rf {{ backups_git_repo_dir }} && git clone {{ backups_git_repo_url }}"
+#   delegate_to: localhost
+#   run_once: true
 
 - name: Init the Git Repo
   ansible.builtin.shell: |
@@ -35,8 +37,7 @@
 
 - name: Run config diff between the local file and the remote file
   ansible.builtin.shell: |
-    cd /tmp/
-    diff -u {{ tmp_configs_store }} {{ backups_git_repo_dir }}/{{ vendor_dir }}/{{ file_name }}
+    diff -u {{ tmp_root_dir }}/{{ file_name }} {{ tmp_root_dir }}/{{ backups_git_repo_dir }}/{{ vendor_dir }}/{{ file_name }}
   register: config_diff
   delegate_to: localhost
   ignore_errors: yes
