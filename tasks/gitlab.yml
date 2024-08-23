@@ -20,10 +20,10 @@
 #     update: yes  # If the repo already exists, it will update it
 
 - name: Init the Git Repo
-  ansible.builtin.command: |
-    "cd /tmp/{{ backups_git_repo_dir }}"
-    "git config --global user.name '{{ git_user }}'"
-    "git config --global user.email '{{ git_user_email }}'"
+  ansible.builtin.shell: |
+    cd /tmp/{{ backups_git_repo_dir }}
+    git config --global user.name '{{ git_user }}'
+    git config --global user.email '{{ git_user_email }}'
     git config --global http.sslVerify false
   delegate_to: localhost
 
