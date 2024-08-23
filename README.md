@@ -1,38 +1,91 @@
-Role Name
-=========
+# role-gitlab
 
-A brief description of the role goes here.
+Role contains tasks that enable storage of device running configurations on gitlab.
 
-Requirements
-------------
+# Requirements
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+- Role reads and already created file containing the device configurations.
+- Minimum ansible 2.11
 
-Role Variables
---------------
+# Role Variables
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
 
-Dependencies
-------------
+- Variables are fed into the role during the play.
+- Varibles are set in playbooks/vars/all.yml file
+- See example below:
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+# Dependencies
+- One of these roles has to run to build the file(s) that role-gitlab operates on.
+- Roles expected :
+    - role-cisco-config-backup
+    - role-junos-config-backup
+    - role-fortios-config-backup
+    - role-f5-config-backup
+    - role-linux-config-backup
 
-Example Playbook
-----------------
+# Example Playbook
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+## playbook/vars/all.yml
+---
+tmp_root_dir: /tmp
+file_name: "{{ inventory_hostname }}-running-config.txt"
+tmp_configs_store: "{{ tmp_root_dir }}/{{ file_name }}"
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+git_user: <git username>
+git_user_email: <git user email address>
 
-License
--------
 
+backups_git_repo_url: https://<git url>/<git username>/network-devices-configs-backup-store.git
+backups_git_repo_dir: network-devices-configs-backup-store
+
+
+cisco_dir: cisco      # cisco backups
+junos_dir: junos      # junos backups
+f5_dir: f5            # f5 backups
+fortios_dir: fortios  # fortios backups
+linux_dir: linux      # linux backups
+
+...
+
+## /playbook/linux-config-backup 
+
+---
+- name: Backup linux configurations
+  hosts: linux-devices
+  gather_facts: false
+
+  pre_tasks:
+    - name: Include Default Vars - environment agnostic
+      ansible.builtin.include_vars:
+        file: vars/all.yml
+
+  tasks:
+    - name: Import role-linux-config-backup role
+      ansible.builtin.import_role:
+        name: role-linux-config-backup
+      vars:
+        linux: true
+
+    - name: Import gitlab role
+      ansible.builtin.import_role:
+        name: role-gitlab
+      vars:
+        git: true
+        vendor_dir: "{{ linux_dir }}"
+
+  post_tasks:
+    - name: Debug out results
+      ansible.builtin.debug:
+        msg:
+          - "configuration backup tasks completed"
+...
+
+# License
 BSD
 
-Author Information
-------------------
+# Author Information
+Name : Allan Maseghe
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+Company: Red Hat
+
+Role: Consultant - Ansible
