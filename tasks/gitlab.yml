@@ -7,15 +7,17 @@
 
 # Tasks to git push network backup devices from execution environment to git repo.
 - name: Clone down repo with backups
-  ansible.builtin.command: "cd /tmp/ && git clone {{ backups_git_repo_url }}"
+  ansible.builtin.command: |
+    cd /tmp/ 
+    "git clone {{ backups_git_repo_url }}"
   delegate_to: localhost
 
 - name: Init the Git Repo
   ansible.builtin.command: |
-    "cd /tmp/{{ backups_git_repo_dir }}
-    git config --global user.name '{{ git_user }}'
-    git config --global user.email '{{ git_user_email }}'
-    git config --global http.sslVerify false"
+    "cd /tmp/{{ backups_git_repo_dir }}""
+    "git config --global user.name '{{ git_user }}'"
+    "git config --global user.email '{{ git_user_email }}'"
+    git config --global http.sslVerify false
   delegate_to: localhost
 
 - name: Run config diff between the local file and the remote file
