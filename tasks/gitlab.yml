@@ -14,7 +14,7 @@
   ansible.builtin.shell: |
     cd /tmp/
     rm -rf {{ backups_git_repo_dir }}
-    git clone {{ backups_git_repo_url }}"
+    git clone {{ backups_git_repo_url }}
   delegate_to: localhost
   run_once: true
 
