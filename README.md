@@ -23,6 +23,11 @@ Role contains tasks that enable storage of device running configurations on gitl
     - role-f5-config-backup
     - role-linux-config-backup
 
+
+# How to use
+- Install the role : $ ansible-galaxy install -r collections/requirements.yml
+  ** The collections/requirements.yml file will be in your tool's repo**
+
 # Example Playbook
 
 ## playbook/vars/all.yml
