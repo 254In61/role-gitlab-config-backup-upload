@@ -1,0 +1,33 @@
+---
+# Tasks to perform gitlab lfs(large file system) automation
+- name: Git LFS - Initialize git lfs in project folder
+  ansible.builtin.command:
+    cmd: git lfs install 
+    chdir: "{{ root_dir }}/{{ repo_dir }}"
+  run_once: true
+  delegate_to: localhost
+
+- name: Git LFS - Track UCS files in Git LFS
+  ansible.builtin.command:
+    cmd: git lfs track "*.ucs" ## To add .bin later?
+    chdir: "{{ root_dir }}/{{ repo_dir }}"
+  run_once: true
+  delegate_to: localhost
+
+- name: Git LFS - Copy file from GitLab project folder
+  ansible.builtin.copy:
+    src: "{{ root_dir }}/{{ ucs_filename }}"
+    dest: "{{ root_dir }}/{{ repo_dir }}/{{ git_repo_vendor_dir }}/{{ ucs_filename }}"
+    # flat: yes
+  delegate_to: localhost
+
+- name: Git LFS - Commit the changes and push to the remote repository
+  ansible.builtin.shell: |
+     cd {{ root_dir }}/{{ repo_dir }}
+     git config --global user.name {{ git_user }}
+     git config --global user.email {{ git_user_email }}
+     git add .
+     git commit -m "Updated ucs backup on $(date)"
+     git push
+  run_once: true
+  delegate_to: localhost

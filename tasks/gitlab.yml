@@ -1,64 +1,41 @@
 ---
-# Errors on this module
-# fatal: protocol ''https' is not supported\n"
-# - name: Clone the repository to the specified path
-#   ansible.builtin.git:
-#     repo: "'{{ backups_git_repo_url }}'"
-#     dest: '{{ tmp_root_dir }}/{{ backups_git_repo_dir }}'
-#     version: 'main'  # You can specify a branch, tag, or commit hash here
-#     update: yes  # If the repo already exists, it will update it
-#   delegate_to: localhost
-#   run_once: true
-
-- name: Clone network-configs-backup-store
-  ansible.builtin.shell: |
-    cd /tmp/
-    rm -rf {{ backups_git_repo_dir }}
-    git clone {{ backups_git_repo_url }}
-  delegate_to: localhost
-  run_once: true
-
-- name: Init the Git Repo
-  ansible.builtin.shell: |
-    cd /tmp/{{ backups_git_repo_dir }}
-    git config --global user.name '{{ git_user }}'
-    git config --global user.email '{{ git_user_email }}'
-    git config --global http.sslVerify false
-  delegate_to: localhost
-  run_once: true
-
-# Why run config diff? Ideallt if the file hasn't changed then the commit will show the same.
-# - name: Run config diff between the local file and the remote file
-#   ansible.builtin.shell: |
-#     diff -u {{ tmp_root_dir }}/{{ file_name }} {{ tmp_root_dir }}/{{ backups_git_repo_dir }}/{{ vendor_dir }}/{{ file_name }}
-#   register: config_diff
-#   delegate_to: localhost
-#   ignore_errors: yes
-
-# - name: Print out config diff output
+# - name: Check if Git credentials are parsed
 #   ansible.builtin.debug:
-#     var: config_diff
-
-- name: Add file to local GitLab repo
-  ansible.builtin.copy:
-    src: "{{ tmp_configs_store }}"
-    dest: "/tmp/{{ backups_git_repo_dir }}/{{ vendor_dir }}/{{ file_name }}"
-  # when: config_diff.rc != 0
-  delegate_to: localhost
-
-- name: Commit and push changes to GitLab
-  ansible.builtin.shell: |
-    cd /tmp/{{ backups_git_repo_dir }}
-    git add .
-    git commit -m "Updated running-config for {{ inventory_hostname }} on $(date)"
-    git push origin main
-  # when: config_diff.rc != 0
-  delegate_to: localhost
-  run_once: true
-
-# No need to clean up.. It is an ephemeral container that is killed after job is completed.
-# - name: Clean up temporary files
-#   ansible.builtin.file:
-#     path: "/tmp/{{ inventory_hostname }}-running-config.txt"
-#     state: absent
+#     msg: "ANSIBLE_NET_PASSWORD: {{ lookup('env', 'ANSIBLE_NET_PASSWORD') }}"
 #   delegate_to: localhost
+
+- name: Clone the Git repository
+  ansible.builtin.git:
+    repo: "{{ git_repo }}"
+    dest: "{{ root_dir }}/{{ repo_dir }}"
+    version: main
+    force: yes
+  run_once: true
+  delegate_to: localhost  
+
+- name: Ensure file is present in the local repo
+  ansible.builtin.file:
+    path: "{{ root_dir }}/{{ repo_dir }}/{{ git_repo_vendor_dir }}/{{ inventory_hostname }}-running-config.txt"
+    state: touch
+  delegate_to: localhost
+
+# Ensures all the devices configs are included, not just one because of run_once.
+- name: Add local temp config store file to local git repo
+  ansible.builtin.copy:
+    src: "{{ tmp_config_store }}"
+    dest: "{{ root_dir }}/{{ repo_dir }}/{{ git_repo_vendor_dir }}/{{ inventory_hostname }}-running-config.txt"
+  delegate_to: localhost
+
+# This is a one time action even if the number of devices are many.
+# All updates would have been done in the prior task
+- name: Commit the changes and push to the remote repository
+  ansible.builtin.shell: |
+     cd {{ root_dir }}/{{ repo_dir }}
+     git config --global user.name {{ git_user }}
+     git config --global user.email {{ git_user_email }}
+     git add .
+     git commit -m "Updated running-configs on $(date)"
+     git push
+  run_once: true
+  delegate_to: localhost
+

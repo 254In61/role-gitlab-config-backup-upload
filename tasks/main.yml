@@ -2,4 +2,10 @@
 # tasks file for gitlab
 - name: Import gitlab tasks
   ansible.builtin.import_tasks: gitlab.yml
-  when: git | bool
+  when: gitlab | bool
+
+- name: Import gitlab-lfs tasks
+  ansible.builtin.import_tasks: gitlab-lfs.yml
+  when: 
+    - gitlab | bool
+    - lfs | bool
