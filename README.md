@@ -1,88 +1,77 @@
 # role-gitlab
-
 Role contains tasks that enable storage of device running configurations on gitlab.
 
 # Requirements
-
 - Role reads and already created file containing the device configurations.
 - Minimum ansible 2.11
 
 # Role Variables
-
-
 - Variables are fed into the role during the play.
 - Varibles are set in playbooks/vars/all.yml file
-- See example below:
-
-# Dependencies
-- One of these roles has to run to build the file(s) that role-gitlab operates on.
-- Roles expected :
-    - role-cisco-config-backup
-    - role-junos-config-backup
-    - role-fortios-config-backup
-    - role-f5-config-backup
-    - role-linux-config-backup
-
+- See example below
 
 # How to use
-- Install the role : $ ansible-galaxy install -r collections/requirements.yml
-  ** The collections/requirements.yml file will be in your tool's repo**
+- See example below
 
-# Example Playbook
+# Example vars file
 
-## playbook/vars/all.yml
+all-vars.yml
 ---
-tmp_root_dir: /tmp
-file_name: "{{ inventory_hostname }}-running-config.txt"
-tmp_configs_store: "{{ tmp_root_dir }}/{{ file_name }}"
-
-git_user: <git username>
-git_user_email: <git user email address>
-
-
-backups_git_repo_url: https://<git url>/<git username>/network-devices-configs-backup-store.git
-backups_git_repo_dir: network-devices-configs-backup-store
-
-
-cisco_dir: cisco      # cisco backups
-junos_dir: junos      # junos backups
-f5_dir: f5            # f5 backups
-fortios_dir: fortios  # fortios backups
-linux_dir: linux      # linux backups
+git_user: "{{ lookup('env', 'ANSIBLE_NET_USERNAME') }}"
+git_pwd: "{{ lookup('env', 'ANSIBLE_NET_PASSWORD') }}"
+git_user_email: amaseghe@redhat.com
+root_dir: /tmp
+repo_dir: network-devices-configs-backup-store
+namespace: redhat
+git_repo: "https://{{ git_user }}:{{ git_pwd }}@gitlab.vodafone.com.au/{{ namespace }}/{{ repo_dir }}.git"
+cisco_git_repo_dir: cisco
 
 ...
 
-## /playbook/linux-config-backup 
+## example playbook file
 
 ---
-- name: Backup linux configurations
-  hosts: linux-devices
+-- name: Backup cisco configurations
+  hosts: appc_cisco_mgmt_sw # From inventory/staging.ini
   gather_facts: false
+  connection: network_cli
+
+  vars:
+    ansible_network_os: ios
 
   pre_tasks:
-    - name: Include Default Vars - environment agnostic
+    - name: Include specific project variables
       ansible.builtin.include_vars:
-        file: vars/all.yml
+        dir: group_vars
+      delegate_to: localhost
 
   tasks:
-    - name: Import role-linux-config-backup role
-      ansible.builtin.import_role:
-        name: role-linux-config-backup
-      vars:
-        linux: true
+    - name: Set file operations facts
+      ansible.builtin.set_fact:
+        tmp_config_store: "{{ root_dir }}/{{ config_backup_file }}"
+        git_repo_vendor_dir: "{{ cisco_git_repo_dir }}"
+      delegate_to: localhost
 
-    - name: Import gitlab role
+    - name: Import role-cisco-config-backup role
       ansible.builtin.import_role:
-        name: role-gitlab
+        name: role-cisco-config-backup
       vars:
-        git: true
-        vendor_dir: "{{ linux_dir }}"
+        cisco: true
+     
+    - name: Import role-gitlab-config-backup-upload
+      ansible.builtin.import_role:
+        name: role-gitlab-config-backup-upload
+      vars:
+        gitlab: true   # bool for role use
+        lfs: false     # bool for gitlab lfs
 
   post_tasks:
     - name: Debug out results
       ansible.builtin.debug:
         msg:
           - "configuration backup tasks completed"
+      delegate_to: localhost
+
 ...
 
 # License
