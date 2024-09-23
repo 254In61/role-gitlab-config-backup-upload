@@ -15,7 +15,7 @@
 
 - name: Ensure file is present in the local repo
   ansible.builtin.file:
-    path: "{{ root_dir }}/{{ repo_dir }}/{{ git_repo_vendor_dir }}/{{ inventory_hostname }}-running-config.txt"
+    path: "{{ root_dir }}/{{ repo_dir }}/{{ git_repo_vendor_dir }}/{{ config_backup_file }}"
     state: touch
   delegate_to: localhost
 
@@ -23,7 +23,7 @@
 - name: Add local temp config store file to local git repo
   ansible.builtin.copy:
     src: "{{ tmp_config_store }}"
-    dest: "{{ root_dir }}/{{ repo_dir }}/{{ git_repo_vendor_dir }}/{{ inventory_hostname }}-running-config.txt"
+    dest: "{{ root_dir }}/{{ repo_dir }}/{{ git_repo_vendor_dir }}/{{ config_backup_file }}"
   delegate_to: localhost
 
 # This is a one time action even if the number of devices are many.
