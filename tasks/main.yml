@@ -2,10 +2,8 @@
 # tasks file for gitlab
 - name: Import gitlab tasks
   ansible.builtin.import_tasks: gitlab.yml
-  when: gitlab | bool
+  when: normal_file == true
 
 - name: Import gitlab-lfs tasks
   ansible.builtin.import_tasks: gitlab-lfs.yml
-  when: 
-    - gitlab | bool
-    - lfs | bool
+  when: large_file == true
