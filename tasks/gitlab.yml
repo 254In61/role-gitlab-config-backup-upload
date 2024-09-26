@@ -11,13 +11,15 @@
     version: main
     force: yes
   run_once: true
-  delegate_to: localhost  
+  delegate_to: localhost
+  ignore_errors: true
 
 - name: Ensure file is present in the local repo
   ansible.builtin.file:
     path: "{{ root_dir }}/{{ repo_dir }}/{{ git_repo_vendor_dir }}/{{ config_backup_file }}"
     state: touch
   delegate_to: localhost
+  ignore_errors: true
 
 # Ensures all the devices configs are included, not just one because of run_once.
 - name: Add local temp config store file to local git repo
@@ -25,6 +27,13 @@
     src: "{{ tmp_config_store }}"
     dest: "{{ root_dir }}/{{ repo_dir }}/{{ git_repo_vendor_dir }}/{{ config_backup_file }}"
   delegate_to: localhost
+  register: gitlab_upload
+  ignore_errors: true
+  
+- name: Add host to failed_hosts list if the task fails
+  ansible.builtin.set_fact:
+    failed_hosts: "{{ failed_hosts + [inventory_hostname] }}"
+  when: gitlab_upload.failed  # If gitlab_upload.failed == true
 
 # This is a one time action even if the number of devices are many.
 # All updates would have been done in the prior task
@@ -38,4 +47,5 @@
      git push
   run_once: true
   delegate_to: localhost
+  ignore_errors: true
 
