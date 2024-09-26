@@ -32,7 +32,7 @@
   
 - name: Add host to failed_hosts list if the task fails
   ansible.builtin.set_fact:
-    failed_hosts: "{{ failed_hosts + [inventory_hostname] }}"
+    failed_hosts: "{{ failed_hosts + inventory_hostname }}"
   when: gitlab_upload.failed  # If gitlab_upload.failed == true
 
 # This is a one time action even if the number of devices are many.
