@@ -1,0 +1,11 @@
+---
+git_user: "{{ lookup('env', 'ANSIBLE_NET_USERNAME') }}"
+git_pwd: "{{ lookup('env', 'ANSIBLE_NET_PASSWORD') }}"
+git_user_email: my-email@mycompany.com
+root_dir: /tmp
+repo_dir: network-devices-configs-backup-store
+namespace: redhat
+git_repo: "https://{{ git_user }}:{{ git_pwd }}@your-domain/{{ namespace }}/{{ repo_dir }}.git"
+f5_git_repo_dir: f5
+
+...
