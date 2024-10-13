@@ -26,7 +26,7 @@
 - name: Add local temp config store file to local git repo
   ansible.builtin.copy:
     src: "{{ tmp_backup_file_path }}"
-    dest: "{{ local_git_repo_path }}/{{ vendor_dir }}/{{ backup_file_name }}"
+    dest: "{{ local_git_repo_backup_file_path }}"
   delegate_to: localhost
   register: gitlab_upload
   ignore_errors: true
@@ -35,7 +35,7 @@
 # All updates would have been done in the prior task
 - name: Commit the changes and push to the remote repository
   ansible.builtin.shell: |
-     cd {{ local_git_repo_path }}
+     cd {{ local_git_repo_dir_path }}
      git config --global user.name {{ git_user }}
      git config --global user.email {{ git_user_email }}
      git add .
