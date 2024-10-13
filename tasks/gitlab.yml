@@ -6,8 +6,8 @@
 
 - name: Clone the Git repository
   ansible.builtin.git:
-    repo: "{{ remote_git_repo }}"
-    dest: "{{ local_git_repo_path }}"
+    repo: "{{ git_repo_url }}"
+    dest: "{{ local_git_repo_dir_path }}"
     version: main
     force: yes
   run_once: true
@@ -16,7 +16,7 @@
 
 - name: Ensure file is present in the local repo
   ansible.builtin.file:
-    path: "{{ local_git_repo_path }}/{{ vendor_dir }}/{{ backup_file_name }}"
+    path: "{{ local_git_repo_backup_file_path }}"
     state: touch
   delegate_to: localhost
   ignore_errors: true
@@ -25,7 +25,7 @@
 # 'run_once' only collects 1 device
 - name: Add local temp config store file to local git repo
   ansible.builtin.copy:
-    src: "{{ tmp_backup_store }}"
+    src: "{{ tmp_backup_file_path }}"
     dest: "{{ local_git_repo_path }}/{{ vendor_dir }}/{{ backup_file_name }}"
   delegate_to: localhost
   register: gitlab_upload
