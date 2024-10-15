@@ -7,26 +7,34 @@
 - name: Clone the Git repository
   ansible.builtin.git:
     repo: "{{ git_repo_url }}"
-    dest: "{{ local_git_repo_dir_path }}"
+    dest: "{{ local_git_repo_path }}"
     version: main
     force: yes
   run_once: true
   delegate_to: localhost
   ignore_errors: true
 
-- name: Ensure file is present in the local repo
+# This task will create the entire directory structure recursively if it doesn't already exist.
+- name: "Ensure {{ local_git_repo_sub_dir }} directory is present in the local repo"
   ansible.builtin.file:
-    path: "{{ local_git_repo_backup_file_path }}"
+    path: "{{ local_git_repo_sub_dir }}"
+    state: directory
+  delegate_to: localhost
+  ignore_errors: true 
+
+- name: "Ensure {{ file_name }} is present in the local repo"
+  ansible.builtin.file:
+    path: "{{ local_git_repo_sub_dir }}/{{ file_name }}"
     state: touch
   delegate_to: localhost
   ignore_errors: true
 
 # Ensures all the devices configs are included.
 # 'run_once' only collects 1 device
-- name: Add local temp config store file to local git repo
+- name: Add local temp file to the local git repo
   ansible.builtin.copy:
-    src: "{{ tmp_backup_file_path }}"
-    dest: "{{ local_git_repo_backup_file_path }}"
+    src: "{{ tmp_cmd_output_store }}"
+    dest: "{{ local_git_repo_sub_dir }}/{{ file_name }}"
   delegate_to: localhost
   register: gitlab_upload
   ignore_errors: true
@@ -35,7 +43,7 @@
 # All updates would have been done in the prior task
 - name: Commit the changes and push to the remote repository
   ansible.builtin.shell: |
-     cd {{ local_git_repo_dir_path }}
+     cd {{ local_git_repo_path }}
      git config --global user.name {{ git_user }}
      git config --global user.email {{ git_user_email }}
      git add .
